@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cockpit-cms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cockpit-cms
+  template:
+    metadata:
+      labels:
+        app: cockpit-cms
+    spec:
+      containers:
+      - name: cockpit-cms
+        image: agentejo/cockpit
+        ports:
+        - containerPort: 80
+        env:
+        - name: COCKPIT_ADMIN
+          value: "admin"
+        - name: COCKPIT_PASSWORD
+          value: "password"
