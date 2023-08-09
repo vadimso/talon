@@ -1,0 +1,32 @@
+# ceate addon
+aws eks create-addon --cluster-name talon-cluster --addon-name aws-ebs-csi-driver \
+  --service-account-role-arn arn:aws:iam::694897697780:role/AmazonEKS_EBS_CSI_DriverRole
+
+  
+aws iam create-role \
+  --role-name amazoneks_ebs_csi_driver_role \
+  --assume-role-policy-document file://"aws-ebs-csi-driver-trust-policy.json"
+
+aws iam attach-role-policy \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy \
+  --role-name amazoneks_ebs_csi_driver_role
+
+# 
+ annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::111122223333:role/amazoneks_ebs_csi_driver_role
+
+
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ebs-csi-controller-sa
+  labels:
+    app.kubernetes.io/name: aws-ebs-csi-driver
+  #Enable if EKS IAM roles for service accounts (IRSA) is used. See https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html for details.
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::111122223333:role/amazoneks_ebs_csi_driver_role
+EOF
+
+# restart aws ebs csi controller
+kubectl -n kube-system rollout restart deployment/ebs-csi-controller
